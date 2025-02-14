@@ -1,0 +1,17 @@
+[project]
+name = "my_package"
+version = "0.1.0"
+description = "A sample Python package"
+authors = [{ name = "Damien", email = "damienskt@gmail.com" }]
+dependencies = [
+    "crawl4ai>=0.4.2",
+    "validators>=0.34.0",
+    "pandas>=2.2.3"
+]
+
+[project.optional-dependencies]
+dev = ["black", "pytest", "mypy"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

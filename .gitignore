@@ -1,0 +1,28 @@
+# 🔹 Ignore all env files except .env
+.env*
+!.env
+
+# 🔹 Virtual Environments
+.venv*
+
+# 🔹 Editor Settings (VS Code, PyCharm)
+.vscode
+.idea/
+
+# 🔹 Python Bytecode
+__pycache__/
+*.pyc
+
+# 🔹 Logs & Cache
+*.log
+logs/
+debug.log
+
+# 🔹 Python Package Files
+src/my_package.egg-info/
+*.egg-info/
+build/
+
+# 🔹 OS-Specific Files
+.DS_Store
+Thumbs.db
