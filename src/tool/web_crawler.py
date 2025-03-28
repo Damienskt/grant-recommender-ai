@@ -3,6 +3,8 @@ import json
 import os
 import asyncio
 import pdb
+from typing import Optional
+
 from crawl4ai import AsyncWebCrawler, CacheMode, CrawlerRunConfig
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
@@ -14,9 +16,9 @@ load_dotenv(dotenv_path=".env")
 
 class Grant(BaseModel):
     name: str
-    description: str | None
-    agency: str | None
-    link: str | None
+    description: Optional[str]
+    agency: Optional[str]
+    link: Optional[str]
 
 # Use secure environment variables
 os.environ["AZURE_API_KEY"] = os.getenv("AZURE_API_KEY", "")  

@@ -16,7 +16,7 @@ async def main():
         for url in urls:
             export_to_excel(await crawl_to_json(url, 0, recrawl_depth, []))
 
-    user_input = input("Enter grant recommendation query: ") #"I'm a startup in the AI sector looking for funding to expand my R&D efforts."
+    user_input = input("Enter grant recommendation query: ") #"I am a manufacturing company doing steel works and am looking to leverage on technology to automate my internal processes what grants can i apply for"
     csv_file_path = "grants.csv"  # Make sure this file exists
     print("\n🔹 Recommending Grants...\n")
     from src.tool.grant_recommender import recommend
