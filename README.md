@@ -12,4 +12,5 @@
 
 ### Execute
 
-1) At root folder run `python -m src.main`
+1) At root folder run `python3 -m src.grants_recommender_tool.main` for grants web crawler recommender
+2) At root folder run `python3 -m src.general_info_adviser_tool.main` for gen info web crawler recommender

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from litellm import completion
 import pandas as pd
 
-from src.contants import SYSTEM_PROMPT
+from src.grants_recommender_tool.contants import SYSTEM_PROMPT
 
 load_dotenv(dotenv_path=".env") 
 

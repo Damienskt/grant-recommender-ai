@@ -1,6 +1,5 @@
 # 🔹 Ignore all env files except .env
-.env
-!.env.example
+src/.env
 
 # 🔹 Virtual Environments
 .venv*
@@ -26,3 +25,5 @@ build/
 # 🔹 OS-Specific Files
 .DS_Store
 Thumbs.db
+
+src/*.csv
