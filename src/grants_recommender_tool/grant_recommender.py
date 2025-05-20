@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from litellm import completion
 import pandas as pd
 
-from src.grants_recommender_tool.contants import SYSTEM_PROMPT
+from src.events_listing_tool.contants import SYSTEM_PROMPT
 
 load_dotenv(dotenv_path=".env") 
 
@@ -29,7 +29,7 @@ def recommend(prompt, data_file_path):
 # Example Usage
 if __name__ == "__main__":
     user_input = input("Enter grant query:") #"I'm a startup in the AI sector looking for funding to expand my R&D efforts."
-    csv_file_path = "grants.csv"  # Make sure this file exists
+    csv_file_path = "scraper_output/grants.csv"  # Make sure this file exists
     print("\n🔹 Recommending Grants...\n")
     recommendations = recommend(user_input, csv_file_path)
     

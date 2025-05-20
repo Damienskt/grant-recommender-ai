@@ -1,5 +1,7 @@
 import os
 
+from src.grants_recommender_tool.contants import OUTPUT_FILENAME, POST_PROCESSED_OUTPUT
+from src.grants_recommender_tool.post_csv_deduplication import merge_csv_records_by_name
 from src.grants_recommender_tool.web_crawler import crawl_to_json, export_to_excel
 
 async def grants_main():
@@ -38,15 +40,16 @@ async def grants_main():
 
         # recrawl_depth = int(input("Enter recrawl depth: "))
         # export_to_excel(await crawl_to_json("https://www.gobusiness.gov.sg/gov-assist/grants/", 0, recrawl_depth))
-        if os.path.isfile("grants.csv"):
-            os.remove("grants.csv")
+        if os.path.isfile(OUTPUT_FILENAME):
+            os.remove(OUTPUT_FILENAME)
 
         await crawl_to_json(urls)
         # for url in urls:
         #     export_to_excel(await crawl_to_json(url))
+        merge_csv_records_by_name(OUTPUT_FILENAME, POST_PROCESSED_OUTPUT, 'incentive_name')
 
     user_input = input("Enter grant recommendation query: ") #"I am a manufacturing company doing steel works and am looking to leverage on technology to automate my internal processes what grants can i apply for"
-    csv_file_path = "grants.csv"  # Make sure this file exists
+    csv_file_path = POST_PROCESSED_OUTPUT  # Make sure this file exists
     print("\n🔹 Recommending Grants...\n")
     from src.grants_recommender_tool.grant_recommender import recommend
     recommendations = recommend(user_input, csv_file_path)

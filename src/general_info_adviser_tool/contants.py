@@ -1,3 +1,5 @@
+OUTPUT_FILEPATH = "src/general_info_adviser_tool/scraper_output/"
+
 SYSTEM_PROMPT = """
 You are a business expansion advisor powered by insights from official and credible sources. You are provided with a chunk of text containing information about doing business in a specific country or region. The content may be unstructured and drawn from websites, reports, or other documents.
 

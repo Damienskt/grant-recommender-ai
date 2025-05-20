@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A sample Python package"
 authors = [{ name = "Damien", email = "damienskt@gmail.com" }]
 dependencies = [
-    "crawl4ai>=0.4.2",
+    "crawl4ai>=0.6.3",
     "validators>=0.34.0",
     "pandas>=2.2.3"
 ]

@@ -10,6 +10,8 @@ from pydantic import BaseModel
 import validators
 from dotenv import load_dotenv
 
+from src.grants_recommender_tool.contants import OUTPUT_FILENAME
+
 load_dotenv(dotenv_path=".env")
 
 class Grant(BaseModel):
@@ -127,10 +129,10 @@ config = CrawlerRunConfig(
     exclude_external_links=True,
     magic=True,
     deep_crawl_strategy=BFSDeepCrawlStrategy(
-            max_depth=0,
+            max_depth=1,
             include_external=False,
             max_pages=50,
-            # score_threshold=0.3
+            # score_threshold=0.5
     )
 )
 
@@ -179,7 +181,7 @@ async def crawl_to_json(urls):
         # else:
         #     return []
 
-def export_to_excel(json_data, filename="grants.csv"):
+def export_to_excel(json_data, filename=OUTPUT_FILENAME):
     if not json_data:
         print("No data to export.")
         return

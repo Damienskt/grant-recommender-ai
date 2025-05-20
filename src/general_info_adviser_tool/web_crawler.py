@@ -3,12 +3,17 @@ import json
 import os
 import asyncio
 import pdb
-from crawl4ai import AsyncWebCrawler, BFSDeepCrawlStrategy, CacheMode, CrawlerRunConfig, LLMConfig
+from crawl4ai import AsyncWebCrawler, BFSDeepCrawlStrategy, CacheMode, CrawlerRunConfig, LLMConfig, \
+    LXMLWebScrapingStrategy
+from crawl4ai.chunking_strategy import SlidingWindowChunking
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
+from litellm import completion
 from pydantic import BaseModel
 import validators
 from dotenv import load_dotenv
+
+from src.general_info_adviser_tool.contants import OUTPUT_FILEPATH
 
 load_dotenv(dotenv_path=".env")
 
@@ -30,50 +35,35 @@ os.environ["AZURE_API_VERSION"] = os.getenv("AZURE_API_VERSION", "")
 MAX_DEPTH = 4  # Allow crawling 1 level deep
 
 SYSTEM_INSTRUCTIONS = ("""
-You are provided with content from a website or document about investing or conducting business in a specific country or region. Your task is to extract pertinent information related to the categories outlined below and return them as structured data in JSON format.
+You are given a text from a webpage related to investing in a country. Your task is to:
 
-Categories:
-	1.	Why Invest: Reasons to invest in this location (e.g., economic strengths, innovation, trade access, incentives, policy support).
-	2.	Where to Invest: Recommended zones, sectors, regions, or industries for investment. ￼
-	3.	Sector Insights: Opportunities, trends, and focus areas across industries.
-	4.	Setting Up a Business: Processes, steps, or legal requirements for registering or starting a business.
-	5.	Tax & Accounting: Tax policies, corporate tax rates, incentives, deductions, accounting standards, or compliance rules.
-	6.	HR & Payroll: Hiring practices, labor regulations, employee entitlements, payroll obligations, and workforce considerations.
-
-Instructions:
-	•	Extract the value for each field based on the definitions above. If a field is not present in the input, return an empty string ("") for that key.
-	•	Do not include category headers or irrelevant formatting from the source content.
-	•	Ensure that the extracted information is accurate and directly corresponds to the thematic areas specified.
-	•	Do not summarize or invent information—only extract what is present in the input.
-	•	The tone should be clear, concise, and easy to understand.
-
-Example Output:
-{
-  "title": "Doing Business in Singapore",
-  "source_url": "https://example.com/singapore-investment-guide",
-  "why_invest": "Singapore offers a strategic location in Southeast Asia, robust infrastructure, and a pro-business environment...",
-  "where_to_invest": "Key sectors for investment include biotechnology, financial services, and information technology...",
-  "sector_insights": "The fintech industry in Singapore is experiencing rapid growth, with numerous opportunities for innovation...",
-  "setting_up_a_business": "To establish a business in Singapore, one must register with the Accounting and Corporate Regulatory Authority (ACRA)...",
-  "tax_and_accounting": "Singapore has a corporate tax rate of 17%, with various incentives available for startups...",
-  "hr_and_payroll": "The Employment Act outlines employee rights, including working hours, overtime pay, and leave entitlements..."
-}
+1. Analyze the **meaning and focus** of each content chunk.
+2. Retain only the content that is relevant to one of the following categories:
+    1. **Why Invest** – Reasons to invest in this location (e.g., economic strengths, innovation, trade access, incentives, policy support).
+    2. **Where to Invest** – Recommended zones, sectors, regions, or industries for investment.
+    3. **Sector Insights** – Opportunities, trends, and focus areas across industries.
+    4. **Setting Up a Business** – Processes, steps, or legal requirements for registering or starting a business.
+    5. **Tax & Accounting** – Tax policies, corporate tax rates, incentives, deductions, accounting standards, or compliance rules.
+    6. **HR & Payroll** – Hiring practices, labor regulations, employee entitlements, payroll obligations, and workforce considerations.
+3. Clean the content as needed (e.g., fix broken sentences or line breaks), and remove any duplicate or repetitive entries.
+4. **Include the citation (e.g., source URL) for each chunk if available. If not, leave the citation field empty.**
 """)
 
 extraction_strategy = LLMExtractionStrategy(
     llm_config=LLMConfig(provider="azure/gpt-4o", base_url=os.environ["AZURE_API_BASE"],
                          api_token=os.environ["AZURE_API_KEY"], temprature=0.3),
     instruction=SYSTEM_INSTRUCTIONS,
-    schema=GeneralInfo.model_json_schema(),
-    extraction_type="schema",
+    # schema=GeneralInfo.model_json_schema(),
+    extraction_type="block",
     apply_chunking=False,
     input_format="markdown",
     verbose=True)
 
 config = CrawlerRunConfig(
-    extraction_strategy=extraction_strategy,
+    # extraction_strategy=extraction_strategy,
     cache_mode=CacheMode.BYPASS,
     scan_full_page=True,
+    scraping_strategy=LXMLWebScrapingStrategy(),
     delay_before_return_html=2.5,
     exclude_social_media_links=True,
     exclude_external_links=True,
@@ -91,34 +81,48 @@ config = CrawlerRunConfig(
 #     print(overall_combined_json)
 #     export_to_excel(overall_combined_json)
 
-async def crawl_to_json(urls):
+# For separate LLM processing
+# async def crawl_to_text(urls):
+#     async with AsyncWebCrawler() as crawler:
+#         for url, filename in urls:
+#             print(f"🔗 Crawling {url}...")
+#             results = await crawler.arun(url, config=config)
+#             for result in results:
+#                 if result.markdown.markdown_with_citations:
+#                     formatted_prompt = f"Data:\n{result.markdown.markdown_with_citations}"
+#                     response = completion(
+#                         model="azure/gpt-4o",
+#                         messages=[
+#                             {"content": SYSTEM_INSTRUCTIONS, "role": "system"},
+#                             {"content": formatted_prompt, "role": "user"}
+#                         ],
+#                         temperature=0.2
+#                     )
+#                     pdb.set_trace()
+#                     export_to_txt(response.choices[0].message["content"], OUTPUT_FILEPATH + filename)
+#         return
+
+async def crawl_to_text(urls):
     async with AsyncWebCrawler() as crawler:
-        for url in urls:
+        for url, filename in urls:
             print(f"🔗 Crawling {url}...")
             results = await crawler.arun(url, config=config)
-            # pdb.set_trace()
-            overall_combined_json = []
             for result in results:
-                pdb.set_trace()
-                if result.extracted_content:
-                    overall_combined_json = overall_combined_json + json.loads(result.extracted_content)
-
-            export_to_excel(overall_combined_json)
+                if result.markdown and result.markdown.markdown_with_citations:
+                    export_to_txt(result.markdown.markdown_with_citations, OUTPUT_FILEPATH + filename, result.url)
+                # if result.cleaned_html:
+                #     export_to_txt(result.cleaned_html, OUTPUT_FILEPATH + filename, result.url)
         return
 
-def export_to_excel(json_data, filename="gen_info.csv"):
-    if not json_data:
+def export_to_txt(txt_data, filename, url):
+    if not txt_data:
         print("No data to export.")
         return
 
-    file_exists = os.path.isfile(filename)
-
     with open(filename, mode="a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=json_data[0].keys())
-        if not file_exists or os.stat(filename).st_size == 0:
-            writer.writeheader()
-
-        writer.writerows(json_data)
+        f.write(txt_data)
+        f.write("\nAbove data is from **Source url:** " + url)
+        f.write("\n")
 
 # if __name__ == "__main__":
 #     asyncio.run(main())

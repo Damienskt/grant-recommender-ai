@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from litellm import completion
 
-from src.general_info_adviser_tool.contants import SYSTEM_PROMPT
+from src.general_info_adviser_tool.contants import OUTPUT_FILEPATH, SYSTEM_PROMPT
 
 load_dotenv(dotenv_path=".env")
 
@@ -30,7 +30,7 @@ def recommend(prompt, data_file_path):
 if __name__ == "__main__":
     user_input = input(
         "Enter query:")  #"I'm a startup in the AI sector looking for funding to expand my R&D efforts."
-    text_file_path = "gen_info.txt"  # Make sure this file exists
+    text_file_path = OUTPUT_FILEPATH  # Make sure this file exists
     print("\n🔹 Recommending...\n")
     recommendations = recommend(user_input, text_file_path)
 
